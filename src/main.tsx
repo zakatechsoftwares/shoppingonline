@@ -17,7 +17,7 @@ const router = createBrowserRouter(
       element: <App />,
     },
   ],
-  { basename: "/src" }
+  { basename: "/shoppingonline" }
 );
 
 ReactDOM.createRoot(document.getElementById("root")!).render(

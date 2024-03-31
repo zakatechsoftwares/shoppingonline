@@ -177,10 +177,11 @@ function App() {
                 return (
                   <tr key={id}>
                     <td>{items}</td>
-                    <td>{money.currencyUnit + quantity}</td>
+                    <td>{quantity}</td>
                     <td>{money.currencyUnit + unitPrice}</td>
                     <td>
                       {money.currencyUnit +
+                        " " +
                         Number(quantity) * Number(unitPrice)}
                     </td>
                     <td>

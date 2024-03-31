@@ -8,7 +8,7 @@ export type MoneyType = {
 };
 
 const initialState: MoneyType = {
-  currencyUnit: "Naira",
+  currencyUnit: "",
   budgeted: 0,
   allocated: 0,
   remaining: 0,

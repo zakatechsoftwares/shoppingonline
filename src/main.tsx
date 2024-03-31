@@ -17,7 +17,7 @@ const router = createBrowserRouter(
       element: <App />,
     },
   ],
-  { basename: "/app" }
+  { basename: "/src" }
 );
 
 ReactDOM.createRoot(document.getElementById("root")!).render(

@@ -6,16 +6,19 @@ import { Provider } from "react-redux";
 import { RouterProvider, createBrowserRouter } from "react-router-dom";
 import { store } from "./redux/store.tsx";
 
-const router = createBrowserRouter([
-  // {
-  //   path: "/",
-  //   element: <Homepage />,
-  // },
-  {
-    path: "/",
-    element: <App />,
-  },
-]);
+const router = createBrowserRouter(
+  [
+    // {
+    //   path: "/",
+    //   element: <Homepage />,
+    // },
+    {
+      path: "/",
+      element: <App />,
+    },
+  ],
+  { basename: "/app" }
+);
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>

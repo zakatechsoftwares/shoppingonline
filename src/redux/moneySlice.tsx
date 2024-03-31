@@ -19,7 +19,10 @@ export const MoneySlice = createSlice({
   initialState,
   reducers: {
     moneyCalc: (state, action: PayloadAction<MoneyType>) => {
-      state = action.payload;
+      //state = action.payload;
+      state.budgeted = action.payload.budgeted;
+      state.allocated = action.payload.allocated;
+      state.remaining = action.payload.remaining;
     },
     budgetedChanged: (state, action) => {
       state.budgeted = action.payload;

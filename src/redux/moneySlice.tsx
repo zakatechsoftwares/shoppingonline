@@ -20,9 +20,9 @@ export const MoneySlice = createSlice({
   reducers: {
     moneyCalc: (state, action: PayloadAction<MoneyType>) =>
       (state = action.payload),
-    budgetedChanged: (state, action) => {
-      state.budgeted = action.payload;
-    },
+    // budgetedChanged: (state, action) => {
+    //   state.budgeted = action.payload;
+    // },
     currencyUnitChanged: (state, action: PayloadAction<string>) => {
       state.currencyUnit = action.payload;
     },
@@ -30,5 +30,8 @@ export const MoneySlice = createSlice({
 });
 
 export const MoneyCalcReducer = MoneySlice.reducer;
-export const { moneyCalc, budgetedChanged, currencyUnitChanged } =
-  MoneySlice.actions;
+export const {
+  moneyCalc,
+  // budgetedChanged,
+  currencyUnitChanged,
+} = MoneySlice.actions;

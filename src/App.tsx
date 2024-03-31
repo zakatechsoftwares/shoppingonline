@@ -2,9 +2,13 @@ import { useState } from "react";
 import reactLogo from "./assets/react.svg";
 import viteLogo from "/vite.svg";
 import "./App.css";
+import { useSelector } from "react-redux";
+import { StoreType } from "./redux/store";
 
 function App() {
   const [count, setCount] = useState(0);
+  const money = useSelector((state: StoreType) => state.moneyCalc);
+  console.log(money.currencyUnit);
 
   return (
     <>
@@ -19,7 +23,7 @@ function App() {
       <h1>Vite + React</h1>
       <div className="card">
         <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
+          count is {count + money.currencyUnit}
         </button>
         <h1>My name is saka Adeyemi Shittu</h1>
         <p>

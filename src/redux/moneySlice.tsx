@@ -1,6 +1,4 @@
-import {
-  createSlice, //, PayloadAction
-} from "@reduxjs/toolkit";
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 export type MoneyType = {
   currencyUnit: string;
@@ -20,17 +18,17 @@ export const MoneySlice = createSlice({
   name: "money",
   initialState,
   reducers: {
-    // moneyCalc: (state, action: PayloadAction<MoneyType>) =>
-    //   (state = action.payload),
-    // budgetedChanged: (state, action) => {
-    //   state.budgeted = action.payload;
-    // },
-    // currencyUnitChanged: (state, action: PayloadAction<string>) => {
-    //   state.currencyUnit = action.payload;
-    // },
+    moneyCalc: (state, action: PayloadAction<MoneyType>) =>
+      (state = action.payload),
+    budgetedChanged: (state, action) => {
+      state.budgeted = action.payload;
+    },
+    currencyUnitChanged: (state, action: PayloadAction<string>) => {
+      state.currencyUnit = action.payload;
+    },
   },
 });
 
 export const MoneyCalcReducer = MoneySlice.reducer;
-//export const { moneyCalc, budgetedChanged, currencyUnitChanged } =
-MoneySlice.actions;
+export const { moneyCalc, budgetedChanged, currencyUnitChanged } =
+  MoneySlice.actions;

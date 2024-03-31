@@ -72,13 +72,13 @@ export const AllocatedSlice = createSlice({
 });
 
 export default AllocatedSlice.reducer;
-// export const {
-//   allocate,
-//   deleteItem,
-//   increaseQuantity,
-//   decreaseQuantity,
-//   clearCart,
-// } = AllocatedSlice.actions;
+export const {
+  allocate,
+  deleteItem,
+  increaseQuantity,
+  decreaseQuantity,
+  // clearCart,
+} = AllocatedSlice.actions;
 export type AllocatedSliceType = ReturnType<
   typeof AllocatedSlice.getInitialState
 >;

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
 import Container from "react-bootstrap/Container";
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
@@ -25,14 +25,10 @@ import {
 //import { itemForSale, countriesCurrency } from "./data/commodity";
 import { IoIosAdd } from "react-icons/io";
 import { IoIosRemove } from "react-icons/io";
-import {
-  useFlutterwave,
-  // closePaymentModal,
-} from "flutterwave-react-v3";
-import Modal from "react-bootstrap/Modal";
-// import { PaystackButton } from "react-paystack";
-// import { useRemitaInline } from "@farayolaj/react-remita-inline";
-//import { InterswitchPay } from "react-interswitch";
+
+import { PaystackConsumer } from "react-paystack";
+
+// you can call this function anything
 
 function App() {
   const allocatedBudget = useSelector(
@@ -44,6 +40,25 @@ function App() {
 
   // const [items, setItems] = useState<{ item: string; unitPrice: number }>();
   // const [quantity, setQuantity] = useState<number>();
+
+  const config = {
+    reference: new Date().getTime().toString(),
+    email: "user@example.com",
+    amount: Math.ceil(money.allocated) * 100, //Amount is in the country's lowest currency. E.g Kobo, so 20000 kobo = N200
+    publicKey: "pk_test_69288cf7afda457f7a807e7c1f353c066b1ea7a5",
+  };
+
+  const componentProps = {
+    ...config,
+    text: "Paystack Button Implementation",
+    //@ts-expect-error: this is a workaround for paystack not supporting typescript
+    onSuccess: (reference) => {
+      dispatch(clearCart());
+      navigate("/");
+      console.log(reference);
+    },
+    onClose: () => navigate("/"),
+  };
 
   useEffect(() => {
     // console.log(allocatedBudget.length);
@@ -76,54 +91,10 @@ function App() {
     money.currencyUnit,
   ]);
 
-  const config = {
-    public_key: "FLWPUBK_TEST-e4bb46908aa02f101fc0420306b1bc17-X", //process.env.REACT_APP_FLUTTERWAVE_PUBLIC_KEY,
-    tx_ref: Date.now(),
-    amount: money.allocated,
-    currency: money.currencyUnit,
-    payment_options: "card,mobilemoney,ussd",
-    customer: {
-      email: "user@gmail.com",
-      phone_number: "08065410021",
-      name: "john doe",
-    },
-    customizations: {
-      title: "My store",
-      description: "Payment for items in cart",
-      logo: "https://st2.depositphotos.com/4403291/7418/v/450/depositphotos_74189661-stock-illustration-online-shop-log.jpg",
-    },
-  };
   const navigate = useNavigate();
-  //@ts-expect-error: Temporary workaround cos Flutterwave has no typescript support
-  const handleFlutterPayment = useFlutterwave(config);
-
-  const [show, setShow] = useState(false);
-
-  const handleClose = () => setShow(false);
 
   return (
     <Container fluid>
-      <Modal show={show} onHide={handleClose}>
-        <Modal.Header closeButton>
-          <Modal.Title>Use this card details to test pay</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          {" "}
-          Card number: 5531 8866 5214 2950
-          <br />
-          cvv: 564 <br />
-          Expiry: 09/32
-          <br />
-          Pin: 3310
-          <br />
-          OTP: 12345
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={handleClose}>
-            Close
-          </Button>
-        </Modal.Footer>
-      </Modal>
       <Row>
         <p className="display-5 fw-normal">Shopping cart</p>
 
@@ -146,7 +117,6 @@ function App() {
             style={{ width: "25%", height: "90%" }}
             onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
               dispatch(currencyUnitChanged(e.target.value));
-              setShow(true);
             }}
             id="currencyUnit"
           >
@@ -223,28 +193,33 @@ function App() {
         <Col lg={3} className="d-flex flex-row"></Col>
         <Col lg={1}></Col>
         <Col lg={1}>
-          <Button
-            className="rounded-start-0 py-2 px-5"
-            onClick={() => {
-              if (money.currencyUnit) {
-                handleFlutterPayment({
-                  callback: (response) => {
-                    // dispatch(clearCart());
-                    dispatch(clearCart());
-                    console.log(response);
-                    //  closePaymentModal(); // this will close the modal programmatically
-                  },
-                  onClose: () => {
-                    navigate("/");
-                  },
-                });
-              } else {
-                alert("Kindly select the currency unit");
-              }
-            }}
-          >
-            Checkout
-          </Button>
+          {/* @ts-expect-error: workaround Paystack not supporting typescript */}
+          <PaystackConsumer {...componentProps}>
+            {({ initializePayment }) => (
+              <Button
+                className="rounded-start-0 py-2 px-5"
+                onClick={() => {
+                  if (money.currencyUnit) {
+                    initializePayment(
+                      () => {
+                        dispatch(clearCart());
+
+                        navigate("/");
+                        alert("Thanks for shopping with us");
+                      },
+                      () => {
+                        navigate("/");
+                      }
+                    );
+                  } else {
+                    alert("Kindly select the currency unit");
+                  }
+                }}
+              >
+                Checkout
+              </Button>
+            )}
+          </PaystackConsumer>
         </Col>
         <Col lg={1}></Col>
       </Row>

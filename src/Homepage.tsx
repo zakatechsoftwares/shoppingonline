@@ -56,7 +56,10 @@ function Homepage() {
           </Button>
         </Modal.Footer>
       </Modal>
-      <Navbar expand="lg" className="bg-body-tertiary">
+      <Navbar
+        expand="lg"
+        className="bg-body-tertiary position-fixed top-0 end-0 start-0"
+      >
         <Container>
           <Navbar.Brand href="#home">
             Welcome to our online shopping application

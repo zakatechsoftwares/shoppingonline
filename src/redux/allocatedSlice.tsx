@@ -77,7 +77,7 @@ export const {
   deleteItem,
   increaseQuantity,
   decreaseQuantity,
-  // clearCart,
+  clearCart,
 } = AllocatedSlice.actions;
 export type AllocatedSliceType = ReturnType<
   typeof AllocatedSlice.getInitialState

@@ -5,7 +5,7 @@ import Col from "react-bootstrap/Col";
 import Table from "react-bootstrap/Table";
 import Form from "react-bootstrap/Form";
 import Button from "react-bootstrap/Button";
-//import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { StoreType } from "./redux/store";
 import {
@@ -14,7 +14,7 @@ import {
   deleteItem,
   increaseQuantity,
   decreaseQuantity,
-  // clearCart,
+  clearCart,
 } from "./redux/allocatedSlice";
 import {
   //budgetedChanged,
@@ -25,12 +25,14 @@ import {
 //import { itemForSale, countriesCurrency } from "./data/commodity";
 import { IoIosAdd } from "react-icons/io";
 import { IoIosRemove } from "react-icons/io";
-// import {
-//   useFlutterwave,
-//   // closePaymentModal,
-//   FlutterwaveConfig,
-// } from "flutterwave-react-v3";
+import {
+  useFlutterwave,
+  // closePaymentModal,
+} from "flutterwave-react-v3";
 import Modal from "react-bootstrap/Modal";
+// import { PaystackButton } from "react-paystack";
+// import { useRemitaInline } from "@farayolaj/react-remita-inline";
+//import { InterswitchPay } from "react-interswitch";
 
 function App() {
   const allocatedBudget = useSelector(
@@ -38,6 +40,7 @@ function App() {
   );
   const money = useSelector((state: StoreType) => state.moneyCalc);
   const dispatch = useDispatch();
+  //const navigate = useNavigate();
 
   // const [items, setItems] = useState<{ item: string; unitPrice: number }>();
   // const [quantity, setQuantity] = useState<number>();
@@ -73,28 +76,26 @@ function App() {
     money.currencyUnit,
   ]);
 
-  // interface Config { public_key: string; tx_ref: number; amount: number; currency: string; payment_options: string; customer: { email: string; phone_number: string; name: string; }; customizations: { title: string; description: string; logo: string; }; }
-
-  //   const config: Config = {
-  //     public_key: "FLWPUBK_TEST-e4bb46908aa02f101fc0420306b1bc17-X", //process.env.REACT_APP_FLUTTERWAVE_PUBLIC_KEY,
-  //     tx_ref: Date.now(),
-  //     amount: money.allocated,
-  //     currency: money.currencyUnit,
-  //     payment_options: "card,mobilemoney,ussd",
-  //     customer: {
-  //       email: "user@gmail.com",
-  //       phone_number: "08065410021",
-  //       name: "john doe",
-  //     },
-  //     customizations: {
-  //       title: "My store",
-  //       description: "Payment for items in cart",
-  //       logo: "https://st2.depositphotos.com/4403291/7418/v/450/depositphotos_74189661-stock-illustration-online-shop-log.jpg",
-  //     },
-  //   };
-  // const navigate = useNavigate();
-
-  // const handleFlutterPayment = useFlutterwave(config);
+  const config = {
+    public_key: "FLWPUBK_TEST-e4bb46908aa02f101fc0420306b1bc17-X", //process.env.REACT_APP_FLUTTERWAVE_PUBLIC_KEY,
+    tx_ref: Date.now(),
+    amount: money.allocated,
+    currency: money.currencyUnit,
+    payment_options: "card,mobilemoney,ussd",
+    customer: {
+      email: "user@gmail.com",
+      phone_number: "08065410021",
+      name: "john doe",
+    },
+    customizations: {
+      title: "My store",
+      description: "Payment for items in cart",
+      logo: "https://st2.depositphotos.com/4403291/7418/v/450/depositphotos_74189661-stock-illustration-online-shop-log.jpg",
+    },
+  };
+  const navigate = useNavigate();
+  //@ts-expect-error: Temporary workaround cos Flutterwave has no typescript support
+  const handleFlutterPayment = useFlutterwave(config);
 
   const [show, setShow] = useState(false);
 
@@ -225,20 +226,21 @@ function App() {
           <Button
             className="rounded-start-0 py-2 px-5"
             onClick={() => {
-              // if (money.currencyUnit) {
-              //   handleFlutterPayment({
-              //     callback: () => {
-              //       // dispatch(clearCart());
-              //       dispatch(clearCart());
-              //       //  closePaymentModal(); // this will close the modal programmatically
-              //     },
-              //     onClose: () => {
-              //       navigate("/");
-              //     },
-              //   });
-              // } else {
-              //   alert("Kindly select the currency unit");
-              // }
+              if (money.currencyUnit) {
+                handleFlutterPayment({
+                  callback: (response) => {
+                    // dispatch(clearCart());
+                    dispatch(clearCart());
+                    console.log(response);
+                    //  closePaymentModal(); // this will close the modal programmatically
+                  },
+                  onClose: () => {
+                    navigate("/");
+                  },
+                });
+              } else {
+                alert("Kindly select the currency unit");
+              }
             }}
           >
             Checkout

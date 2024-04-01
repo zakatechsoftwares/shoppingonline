@@ -58,7 +58,7 @@ function Homepage() {
       </Modal>
       <Navbar
         expand="lg"
-        className="bg-body-tertiary position-fixed top-0 end-0 start-0"
+        className="bg-body-tertiary position-fixed top-0 end-0 start-0 z-3"
       >
         <Container>
           <Navbar.Brand href="#home">
@@ -83,7 +83,7 @@ function Homepage() {
         </Container>
       </Navbar>
 
-      <Row xs={1} md={2} lg={4} className="g-4">
+      <Row xs={1} md={2} lg={4} className="g-4 pt-5 z-0">
         {data.map((item) => {
           const itemExistsInCart = itemsInCart.find(
             (cartItem) => cartItem.id === item.id

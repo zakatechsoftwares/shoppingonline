@@ -1,138 +1,144 @@
 import { useEffect, useState } from "react";
-import Container from "react-bootstrap/Container";
-import Nav from "react-bootstrap/Nav";
-import Card from "react-bootstrap/Card";
-import Col from "react-bootstrap/Col";
-import Row from "react-bootstrap/Row";
-import Button from "react-bootstrap/Button";
-import Navbar from "react-bootstrap/Navbar";
-import { FaCartPlus } from "react-icons/fa";
+import { Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import Modal from "react-bootstrap/Modal";
 import { allocate, deleteItem } from "./redux/allocatedSlice";
-import { useNavigate } from "react-router-dom";
 import { StoreType } from "./redux/store";
 
-function Homepage() {
-  const addedItems = useSelector((state: StoreType) => state.allocatedBudget);
+type Product = {
+  id: number;
+  title: string;
+  category: string;
+  description: string;
+  image: string;
+  price: number;
+};
 
-  type ObjectType = {
-    category: string;
-    description: string;
+const price = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" });
 
-    id: string;
-
-    image: string;
-    price: number;
-
-    title: string;
-  };
-  const [data, setData] = useState<ObjectType[]>([]);
-  const itemsInCart = useSelector((state: StoreType) => state.allocatedBudget);
-  const navigate = useNavigate();
+export default function Homepage() {
+  const cart = useSelector((state: StoreType) => state.allocatedBudget);
   const dispatch = useDispatch();
+  const [products, setProducts] = useState<Product[]>([]);
+  const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
+  const [attempt, setAttempt] = useState(0);
+  const [search, setSearch] = useState("");
+  const [category, setCategory] = useState("");
+
   useEffect(() => {
-    fetch("https://fakestoreapi.com/products?limit=12")
-      .then((res) => res.json())
-      .then((json) => {
-        setData(json);
-      });
-  }, []);
+    const controller = new AbortController();
+    async function loadProducts() {
+      try {
+        const response = await fetch("https://fakestoreapi.com/products?limit=12", {
+          signal: controller.signal,
+        });
+        if (!response.ok) throw new Error("Catalogue request failed");
+        const data: Product[] = await response.json();
+        if (!Array.isArray(data)) throw new Error("Invalid catalogue");
+        if (controller.signal.aborted) return;
+        setProducts(data);
+        setStatus("ready");
+      } catch {
+        if (!controller.signal.aborted) setStatus("error");
+      }
+    }
+    void loadProducts();
+    return () => controller.abort();
+  }, [attempt]);
 
-  const [show, setShow] = useState(false);
-
-  const handleClose = () => setShow(false);
+  const categories = [...new Set(products.map((product) => product.category))].sort();
+  const query = search.trim().toLowerCase();
+  const visibleProducts = products.filter((product) =>
+    (!category || product.category === category) && product.title.toLowerCase().includes(query)
+  );
+  const quantity = cart.reduce((total, item) => total + item.quantity, 0);
 
   return (
-    <Container fluid>
-      <Modal show={show} onHide={handleClose}>
-        <Modal.Header closeButton>
-          <Modal.Title>Empty cart</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>Your cart is empty, Add items to cart</Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={handleClose}>
-            Close
-          </Button>
-        </Modal.Footer>
-      </Modal>
-      <Navbar
-        expand="lg"
-        className="bg-body-tertiary position-fixed top-0 end-0 start-0 z-3"
-      >
-        <Container>
-          <Navbar.Brand href="#home">
-            Welcome to our online shopping application
-          </Navbar.Brand>
-          <Navbar.Toggle aria-controls="basic-navbar-nav" />
-          <Navbar.Collapse id="basic-navbar-nav">
-            <Nav className="ms-auto">
-              <Button
-                onClick={() => {
-                  if (addedItems.length < 1) {
-                    setShow(true);
-                  } else {
-                    navigate("/cart");
-                  }
-                }}
-              >
-                Go to cart
-              </Button>
-            </Nav>
-          </Navbar.Collapse>
-        </Container>
-      </Navbar>
+    <main className="shop-shell">
+      <header className="shop-header">
+        <Link to="/" className="shop-brand">Online Shop</Link>
+        <Link to="/cart" className="shop-button">
+          <i className="bi bi-bag" aria-hidden="true" /> Cart <span className="shop-count">{quantity}</span>
+        </Link>
+      </header>
 
-      <Row xs={1} md={2} lg={4} className="g-4 pt-5 z-0">
-        {data.map((item) => {
-          const itemExistsInCart = itemsInCart.find(
-            (cartItem) => cartItem.id === item.id
-          );
+      <section className="shop-hero">
+        <h1>Shop the collection</h1>
+        <p>Browse the catalogue and add your favourites to your cart.</p>
+      </section>
 
-          return (
-            <Col key={item.id} style={{ height: "60vh" }} className="my-5">
-              <Card className="mb-5">
-                {" "}
-                <Card.Img
-                  variant="top"
-                  src={item.image}
-                  style={{ height: "30vh" }}
-                />
-                <Card.Body style={{ height: "30vh" }}>
-                  <Card.Title style={{ height: "10vh", overflow: "hidden" }}>
-                    {item.title}
-                  </Card.Title>
-                  <Card.Text style={{ height: "20vh", overflow: "hidden" }}>
-                    {item.description}
-                  </Card.Text>
-                </Card.Body>
-                <Button
-                  variant="primary"
-                  onClick={() => {
-                    if (itemExistsInCart) {
-                      dispatch(deleteItem(item.id));
-                    } else {
-                      dispatch(
-                        allocate({
-                          id: item.id,
-                          items: item.title,
-                          quantity: 1,
-                          unitPrice: Number(item.price),
-                        })
-                      );
-                    }
-                  }}
-                >
-                  <FaCartPlus className="me-1" />
-                  {itemExistsInCart ? "Remove from cart" : "Add to cart"}
-                </Button>
-              </Card>
-            </Col>
-          );
-        })}
-      </Row>
-    </Container>
+      <section aria-label="Product catalogue">
+        <div className="shop-filters">
+          <label>Search products
+            <input type="search" placeholder="Search by product name" value={search}
+              onChange={(event) => setSearch(event.target.value)} />
+          </label>
+          <label>Category
+            <select value={category} onChange={(event) => setCategory(event.target.value)}>
+              <option value="">All categories</option>
+              {categories.map((name) => <option key={name}>{name}</option>)}
+            </select>
+          </label>
+        </div>
+
+        {status === "loading" && <p className="shop-message" role="status">Loading products…</p>}
+        {status === "error" && (
+          <div className="shop-message">
+            <p role="alert">The catalogue couldn’t load.</p>
+            <button className="shop-button" onClick={() => { setStatus("loading"); setAttempt(attempt + 1); }}>
+              Try again
+            </button>
+          </div>
+        )}
+        {status === "ready" && (
+          <>
+            <p className="shop-results" role="status">
+              {visibleProducts.length} {visibleProducts.length === 1 ? "product" : "products"}
+            </p>
+            {visibleProducts.length === 0 && (
+              <div className="shop-message">
+                <p>No products match your filters.</p>
+                <button className="shop-button" onClick={() => { setSearch(""); setCategory(""); }}>
+                  Clear filters
+                </button>
+              </div>
+            )}
+            <div className="shop-grid">
+              {visibleProducts.map((product) => {
+                const id = String(product.id);
+                const inCart = cart.some((item) => item.id === id);
+                return (
+                  <article className="shop-product" key={id}>
+                    <div className="shop-product-image">
+                      <img src={product.image} alt="" loading="lazy" />
+                    </div>
+                    <div className="shop-product-body">
+                      <p className="shop-category">{product.category}</p>
+                      <h2>{product.title}</h2>
+                      <details>
+                        <summary>Product details</summary>
+                        <p>{product.description}</p>
+                      </details>
+                      <strong>{price.format(product.price)}</strong>
+                      <button className={inCart ? "shop-button" : "shop-button shop-primary"}
+                        aria-label={inCart ? `Remove ${product.title} from cart` : `Add ${product.title} to cart`}
+                        onClick={() => {
+                          if (inCart) {
+                            dispatch(deleteItem(id));
+                          } else {
+                            dispatch(allocate({ id, items: product.title, quantity: 1, unitPrice: product.price }));
+                          }
+                        }}
+                      >
+                        {inCart ? "Remove from cart" : "Add to cart"}
+                      </button>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          </>
+        )}
+      </section>
+    </main>
   );
 }
-
-export default Homepage;

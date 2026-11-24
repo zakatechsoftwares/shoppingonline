@@ -1,230 +1,85 @@
-import React, { useEffect } from "react";
-import Container from "react-bootstrap/Container";
-import Row from "react-bootstrap/Row";
-import Col from "react-bootstrap/Col";
-import Table from "react-bootstrap/Table";
-import Form from "react-bootstrap/Form";
-import Button from "react-bootstrap/Button";
-import { useNavigate } from "react-router-dom";
-import { useSelector, useDispatch } from "react-redux";
+import { Link, useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { usePaystackPayment } from "react-paystack";
 import { StoreType } from "./redux/store";
-import {
-  //   AllocatedArrayType,
-  // allocate,
-  deleteItem,
-  increaseQuantity,
-  decreaseQuantity,
-  clearCart,
-} from "./redux/allocatedSlice";
-import {
-  //budgetedChanged,
-  moneyCalc,
-  currencyUnitChanged,
-} from "./redux/moneySlice";
-//import { nanoid } from "nanoid";
-//import { itemForSale, countriesCurrency } from "./data/commodity";
-import { IoIosAdd } from "react-icons/io";
-import { IoIosRemove } from "react-icons/io";
+import { clearCart, decreaseQuantity, deleteItem, increaseQuantity } from "./redux/allocatedSlice";
+import { currencyUnitChanged } from "./redux/moneySlice";
 
-import { PaystackConsumer } from "react-paystack";
-
-// you can call this function anything
-
-function App() {
-  const allocatedBudget = useSelector(
-    (state: StoreType) => state.allocatedBudget
-  );
-  const money = useSelector((state: StoreType) => state.moneyCalc);
+export default function App() {
+  const cart = useSelector((state: StoreType) => state.allocatedBudget);
+  const currency = useSelector((state: StoreType) => state.moneyCalc.currencyUnit);
   const dispatch = useDispatch();
-  //const navigate = useNavigate();
-
-  // const [items, setItems] = useState<{ item: string; unitPrice: number }>();
-  // const [quantity, setQuantity] = useState<number>();
-
-  const config = {
-    reference: new Date().getTime().toString(),
-    email: "user@example.com",
-    amount: Math.ceil(money.allocated) * 100, //Amount is in the country's lowest currency. E.g Kobo, so 20000 kobo = N200
-    publicKey: "pk_test_69288cf7afda457f7a807e7c1f353c066b1ea7a5",
-  };
-
-  const componentProps = {
-    ...config,
-    text: "Paystack Button Implementation",
-    //@ts-expect-error: this is a workaround for paystack not supporting typescript
-    onSuccess: (reference) => {
-      dispatch(clearCart());
-      navigate("/");
-      console.log(reference);
-    },
-    onClose: () => navigate("/"),
-  };
-
-  useEffect(() => {
-    // console.log(allocatedBudget.length);
-    const array: number[] = [];
-    allocatedBudget?.forEach((element) => {
-      array.push(Number(element.quantity) * Number(element.unitPrice));
-    });
-
-    const totalSpent =
-      array.length > 0
-        ? array.reduce((sum, element) => Number(sum) + Number(element))
-        : 0;
-
-    const remainingAmount: number = Number(money.budgeted) - Number(totalSpent);
-
-    dispatch(
-      moneyCalc({
-        currencyUnit: money.currencyUnit,
-        budgeted: money.budgeted,
-        allocated: totalSpent,
-        remaining: remainingAmount,
-      })
-    );
-  }, [
-    allocatedBudget,
-    money.budgeted,
-    dispatch,
-    money.allocated,
-    money.remaining,
-    money.currencyUnit,
-  ]);
-
   const navigate = useNavigate();
+  const total = cart.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
+  const price = new Intl.NumberFormat("en-US", { style: "currency", currency: currency || "USD" });
+  const initializePayment = usePaystackPayment({
+    reference: Date.now().toString(),
+    email: "user@example.com",
+    amount: Math.ceil(total) * 100,
+    publicKey: "pk_test_69288cf7afda457f7a807e7c1f353c066b1ea7a5",
+  });
 
   return (
-    <Container fluid>
-      <Row>
-        <p className="display-5 fw-normal">Shopping cart</p>
-
-        <Col lg={6}>
-          <Form.Control
-            plaintext
-            readOnly
-            placeholder={`Cart value : ${money.currencyUnit + money.allocated}`}
-            className="border border-1 rounded-2 ps-2 bg-info-subtle"
-          />
-        </Col>
-        <Col
-          lg={6}
-          className="d-flex justify-content-start align-items-center bg-info-subtle ps-2 rounded-2"
-        >
-          <Form.Label className="mb-0 me-1">Currency unit</Form.Label>
-          <Form.Select
-            aria-label="Default select example"
-            className="rounded-2 "
-            style={{ width: "25%", height: "90%" }}
-            onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
-              dispatch(currencyUnitChanged(e.target.value));
-            }}
-            id="currencyUnit"
-          >
-            <option>Currency Unit</option>
-
-            <option value="USD">$</option>
-
-            <option value="NGN">₦</option>
-          </Form.Select>
-        </Col>
-      </Row>
-      <Row className="mt-5">
-        <Col>
-          <p className="h3 fw-normal ">Items in cart</p>
-          <Table>
-            <thead>
-              <tr>
-                <th>Items</th>
-                <th>Quantity</th>
-                <th>Unit Price</th>
-                <th>Item Price</th>
-                <th>Increase Quantity</th>
-                <th>Decrease Quantity</th>
-                <th>Delete</th>
-              </tr>
-            </thead>
-            <tbody>
-              {allocatedBudget.map(({ id, items, quantity, unitPrice }) => {
-                return (
-                  <tr key={id}>
-                    <td>{items}</td>
-                    <td>{quantity}</td>
-                    <td>{money.currencyUnit + unitPrice}</td>
-                    <td>
-                      {money.currencyUnit +
-                        " " +
-                        Number(quantity) * Number(unitPrice)}
-                    </td>
-                    <td>
-                      <Button
-                        className="p-0 bg-transparent border-0 text-dark"
-                        onClick={() => dispatch(increaseQuantity(id))}
-                      >
-                        <IoIosAdd />
-                      </Button>
-                    </td>
-                    <td>
-                      <Button
-                        className="p-0 bg-transparent border-0 text-dark"
-                        onClick={() => dispatch(decreaseQuantity(id))}
-                      >
-                        <IoIosRemove />
-                      </Button>
-                    </td>
-                    <td>
-                      <Button
-                        className="p-0 bg-transparent border-0 text-dark"
-                        onClick={() => dispatch(deleteItem(id))}
-                      >
-                        <i className="bi bi-x-lg p-1 fw-bold rounded-5 bg-danger text-white"></i>
-                      </Button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </Table>
-        </Col>
-      </Row>
-      <Row>
-        <Col lg={3} className="d-flex flex-row"></Col>
-        <Col lg={3} className="d-flex flex-row "></Col>
-
-        <Col lg={3} className="d-flex flex-row"></Col>
-        <Col lg={1}></Col>
-        <Col lg={1}>
-          {/* @ts-expect-error: workaround Paystack not supporting typescript */}
-          <PaystackConsumer {...componentProps}>
-            {({ initializePayment }) => (
-              <Button
-                className="rounded-start-0 py-2 px-5"
-                onClick={() => {
-                  if (money.currencyUnit) {
-                    initializePayment(
-                      () => {
-                        dispatch(clearCart());
-
-                        navigate("/");
-                        alert("Thanks for shopping with us");
-                      },
-                      () => {
-                        navigate("/");
-                      }
-                    );
-                  } else {
-                    alert("Kindly select the currency unit");
-                  }
-                }}
-              >
-                Checkout
-              </Button>
-            )}
-          </PaystackConsumer>
-        </Col>
-        <Col lg={1}></Col>
-      </Row>
-    </Container>
+    <main className="shop-shell">
+      <header className="shop-header">
+        <Link to="/" className="shop-brand">Online Shop</Link>
+        <Link to="/" className="shop-button">Continue shopping</Link>
+      </header>
+      <h1 className="shop-cart-title">Your cart</h1>
+      {cart.length === 0 ? (
+        <section className="shop-message">
+          <p>Your cart is empty.</p>
+          <Link to="/" className="shop-button shop-primary">Browse products</Link>
+        </section>
+      ) : (
+        <div className="shop-cart-layout">
+          <ul className="shop-cart-list" aria-label="Cart items">
+            {cart.map(({ id, items, quantity, unitPrice }) => (
+              <li className="shop-cart-item" key={id}>
+                <div>
+                  <h2>{items}</h2>
+                  <p>{price.format(unitPrice)} each</p>
+                </div>
+                <div className="shop-quantity">
+                  <button className="shop-button" aria-label={`Decrease quantity of ${items}`}
+                    disabled={quantity <= 1} onClick={() => dispatch(decreaseQuantity(id))}>−</button>
+                  <span aria-live="polite">{quantity}</span>
+                  <button className="shop-button" aria-label={`Increase quantity of ${items}`}
+                    onClick={() => dispatch(increaseQuantity(id))}>+</button>
+                </div>
+                <div className="shop-line-total">
+                  <strong>{price.format(quantity * unitPrice)}</strong>
+                  <button className="shop-remove" aria-label={`Remove ${items}`}
+                    onClick={() => dispatch(deleteItem(id))}>Remove</button>
+                </div>
+              </li>
+            ))}
+          </ul>
+          <section className="shop-summary">
+            <h2>Order summary</h2>
+            <label htmlFor="currencyUnit">Display currency</label>
+            <select id="currencyUnit" value={currency}
+              onChange={(event) => dispatch(currencyUnitChanged(event.target.value))}>
+              <option value="">Choose a currency</option>
+              <option value="USD">US dollar (USD)</option>
+              <option value="NGN">Nigerian naira (NGN)</option>
+            </select>
+            <p className="shop-help">Changes the price label only. No currency conversion is applied.</p>
+            <p className="shop-total"><span>Subtotal</span><strong>{price.format(total)}</strong></p>
+            <button className="shop-button shop-primary" disabled={!currency || total <= 0}
+              onClick={() => initializePayment({
+                onSuccess: () => {
+                  dispatch(clearCart());
+                  navigate("/");
+                  alert("Thanks for shopping with us");
+                },
+                onClose: () => navigate("/"),
+              })}>
+              Test checkout
+            </button>
+          </section>
+        </div>
+      )}
+    </main>
   );
 }
-
-export default App;
